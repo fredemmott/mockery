@@ -689,20 +689,20 @@ class ContainerTest extends PHPUnit_Framework_TestCase
     public function testCanOverrideExpectedParametersOfInternalPHPClassesToPreserveRefs()
     {
         \Mockery::getConfiguration()->setInternalClassMethodParamMap(
-            'ZipArchive', 'addFromString', array('&$filename', '$content')
+            'Memcached', 'deleteMulti', array('&$keys', '$time')
         );
         // @ used to avoid E_STRICT for incompatible signature
-        @$m = $this->container->mock('ZipArchive');
+        @$m = $this->container->mock('Memcached');
         $this->assertInstanceOf("Mockery\MockInterface", $m, "Mocking failed, remove @ error suppresion to debug");
-        $m->shouldReceive('addFromString')->with(
-            \Mockery::on(function(&$filename) {
-                $filename['_id'] = 123;
+        $m->shouldReceive('deleteMulti')->with(
+            \Mockery::on(function(&$keys) {
+                $keys['_id'] = 123;
                 return true;
             }),
-            \Mockery::type('string')
+            \Mockery::type('int')
         );
         $data = array('a'=>1,'b'=>2);
-        $m->addFromString($data, '');
+        $m->deleteMulti($data, 0);
         $this->assertTrue(isset($data['_id']));
         $this->assertEquals(123, $data['_id']);
         $this->container->mockery_verify();
