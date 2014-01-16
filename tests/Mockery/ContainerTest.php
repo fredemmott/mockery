@@ -688,19 +688,21 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
     public function testCanOverrideExpectedParametersOfInternalPHPClassesToPreserveRefs()
     {
-        if (!class_exists('MongoCollection', false)) $this->markTestSkipped('ext/mongo not installed');
         \Mockery::getConfiguration()->setInternalClassMethodParamMap(
-            'MongoCollection', 'insert', array('&$data', '$options')
+            'ZipArchive', 'addFromString', array('&$filename', '$content')
         );
         // @ used to avoid E_STRICT for incompatible signature
-        @$m = $this->container->mock('MongoCollection');
+        @$m = $this->container->mock('ZipArchive');
         $this->assertInstanceOf("Mockery\MockInterface", $m, "Mocking failed, remove @ error suppresion to debug");
-        $m->shouldReceive('insert')->with(
-            \Mockery::on(function(&$data) {$data['_id'] = 123; return true;}),
-            \Mockery::type('array')
+        $m->shouldReceive('addFromString')->with(
+            \Mockery::on(function(&$filename) {
+                $filename['_id'] = 123;
+                return true;
+            }),
+            \Mockery::type('string')
         );
         $data = array('a'=>1,'b'=>2);
-        $m->insert($data, array());
+        $m->addFromString($data, '');
         $this->assertTrue(isset($data['_id']));
         $this->assertEquals(123, $data['_id']);
         $this->container->mockery_verify();
